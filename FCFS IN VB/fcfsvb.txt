@@ -1,0 +1,140 @@
+Option Explicit
+Const Maxs As Integer = 50
+Dim N As Integer
+Dim Data(-1 To Maxs) As Long, h As Long, T(-1 To Maxs) As Long
+Dim create As Boolean
+Const INCH = 1440
+
+Private Sub cmdBSearch_Click()
+On Error GoTo LSearchEr
+Dim i As Integer, Count As Long, ast As Double
+If (create = True) Then
+ If (TxtInitialHead.Text <> "") Then
+ h = TxtInitialHead.Text
+ Call FCFS(N, h, Count, ast) 'call to procedure to perform FCFS Disk Scheduling
+ PicBSearch.Cls
+ PicBSearch.Print "  This new (FCFS) list of all items entered "
+ PicBSearch.Print
+  If N > 30 Then
+   For i = 0 To 30
+   PicBSearch.Print T(i); Spc(2);
+    Next i
+    PicBSearch.Print
+    For i = 31 To N - 1
+   PicBSearch.Print T(i); Spc(2);
+    Next i
+    Else
+    For i = 0 To N - 1
+   PicBSearch.Print T(i); Spc(2);
+    Next i
+    End If
+  PicBSearch.Print: PicBSearch.Print
+  PicBSearch.Print "The Total Head Movement is: "; Count
+  PicBSearch.Print " The Average Seek Time is:  "; ast
+  
+ Else
+ MsgBox " Make Sure you enter the initial disk head position in the available textbox", , "Enter Search"
+ TxtInitialHead.SetFocus
+ End If
+Else
+MsgBox "Ensure that you create Elements you wish to test", , "Create elements"
+CmdStart.SetFocus
+End If
+Exit Sub
+LSearchEr:
+MsgBox "Application terminated! error has been encountered " & vbCrLf & vbCrLf & Err.Description & Err.Number, vbCritical, "Error report"
+On Error GoTo 0
+End Sub
+
+Private Sub CmdExit_Click()
+Beep
+Unload Me
+End Sub
+Private Sub CmdReset_Click()
+Dim i As Integer
+For i = 0 To Maxs - 1
+'Data(i) = ""
+TXTITEM(i).Text = ""
+Next i
+create = False
+PicBSearch.Cls
+TxtInitialHead.Text = ""
+CmdStart.Enabled = True
+CmdStart.SetFocus
+End Sub
+Private Sub CmdStart_Click()
+On Error GoTo starter
+Dim i As Integer
+N = InputBox("Enter the total number of elements to create between 1 and 50", "Create Elements")
+If IsNumeric(N) Then
+ If (N <= 0) Then
+ MsgBox "Number of elements cannot be less or equal to zero", , "Wrong Value"
+ create = False: Exit Sub
+ Else
+ If (N <= Maxs) Then
+ MsgBox "Read in all the cylinder numbers or track location to be created "
+  For i = 0 To N - 1
+  Data(i) = Val(InputBox("Enter Item to create: " & i + 1, "Enter"))
+  TXTITEM(i) = Data(i)
+  Next i
+  create = True: CmdStart.Enabled = False: TxtInitialHead.SetFocus: Exit Sub
+  Else
+  MsgBox "Number of Data to be created is more than available space; Make sure Number is less than or equal to 50 ", , "OverfloW"
+  create = False: Exit Sub
+  End If
+  End If
+  Else
+  MsgBox "Ensure that your input is Numeric value! ", , "Wrong Input"
+  create = False: Exit Sub
+  End If
+  Exit Sub
+starter:
+MsgBox "Application terminated! Error encountered " & vbCrLf & vbCrLf & Err.Description, vbCritical, "Error"
+On Error GoTo 0
+End Sub
+
+Private Sub FCFS(ByVal N As Integer, ByVal h As Integer, ByRef cnt As Long, ByRef ast As Double)
+Dim i As Integer
+cnt = 0
+cnt = cnt + Abs(h - Data(0))
+T(0) = Data(0)
+For i = 1 To N - 1
+cnt = cnt + Abs(Data(i) - Data(i - 1))
+T(i) = Data(i)
+Next i
+ast = cnt / N
+End Sub
+
+Private Sub Form_Load()
+Dim i As Integer
+For i = 0 To Maxs - 1
+TXTITEM(i).Locked = True
+Next i
+ create = False
+CmdStart.ToolTipText = "Click Me to start Creating elements in the boxes"
+cmdBSearch.ToolTipText = "Make Sure you click start before you click me "
+CmdStart.Enabled = True
+CmdStart.TabIndex = 0
+HScroll1.Max = (10 * INCH - (Me.Width * 0.5))
+HScroll1.Min = -0.15 * INCH
+HScroll1.LargeChange = INCH
+HScroll1.SmallChange = INCH / 2
+PicBSearch.Width = 20 * INCH
+End Sub
+
+Private Sub HScroll1_Change()
+HScroll1_Scroll
+End Sub
+
+Private Sub HScroll1_Scroll()
+
+PicBSearch.Left = HScroll1.Value * -1
+PicBSearch.Width = PicBSearch.Width + HScroll1.Value
+Call cmdBSearch_Click
+HScroll1.Width = HScroll1.Width + 1
+End Sub
+
+Private Sub TxtInitialHead_LostFocus()
+cmdBSearch.SetFocus
+End Sub
+
